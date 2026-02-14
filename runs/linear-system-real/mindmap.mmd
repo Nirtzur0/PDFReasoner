@@ -1,0 +1,40 @@
+flowchart LR
+    root["Abstract"]
+    s1["References"]
+    m0["Section Heading Explanation"]
+    m1["Modelling Unconditional Density of Observations"]
+    m2["Factor Analysis: Compressing Correlational Structure"]
+    m3["Partial Derivative Optimization"]
+    m4["Estimating Initial State Variance in Multiple Observation Sequen"]
+    c0["Dynamic linear models with Markov-switching C.-J Kim J. Economet"]
+    c1["Solutions to the linear smoothing problem H E Rauch 10.1109/tac."]
+    c2["Dynamic Linear Models with Switching R H Shumway D S Stoffer 10."]
+    c3["An approach to time series smoothing and forecasting using the E"]
+    c4["An Introduction to hidden Markov models L R Rabiner B H Juang IE"]
+    c5["B D O Anderson J B Moore Optimal Filtering Englewood Cli s, NJ P"]
+    root -- "scope" --> s1
+    root -- "uses" --> c0
+    root -- "uses" --> c1
+    root -- "uses" --> c2
+    root -- "uses" --> c3
+    root -- "uses" --> c4
+    root -- "uses" --> c5
+    classDef root fill:#0b7285,color:#fff,stroke:#0b7285,stroke-width:2px;
+    classDef section fill:#e3fafc,stroke:#66d9e8,color:#0b7285;
+    classDef method fill:#fff3bf,stroke:#fcc419,color:#7c5b00;
+    classDef result fill:#d3f9d8,stroke:#69db7c,color:#2b8a3e;
+    classDef assumption fill:#ffe3e3,stroke:#ff8787,color:#c92a2a;
+    classDef citation fill:#f3f0ff,stroke:#9775fa,color:#5f3dc4;
+    class root root;
+    class s1 section;
+    class m0 method;
+    class m1 method;
+    class m2 method;
+    class m3 method;
+    class m4 method;
+    class c0 citation;
+    class c1 citation;
+    class c2 citation;
+    class c3 citation;
+    class c4 citation;
+    class c5 citation;

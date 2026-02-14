@@ -1,0 +1,27 @@
+// PaperCoach Mindmap
+digraph {
+	bgcolor=white nodesep=0.45 rankdir=LR ranksep=0.65 splines=spline
+	node [fontname=Helvetica fontsize=11 shape=box style="rounded,filled"]
+	edge [color="#666666" fontname=Helvetica fontsize=9]
+	root [label="Extensionof Maximum Likelihood Factor Analysis" color="#0b7285" fillcolor="#0b7285" fontcolor=white]
+	s0 [label=Abstract color="#66d9e8" fillcolor="#e3fafc" fontcolor="#0b7285"]
+	s1 [label=References color="#66d9e8" fillcolor="#e3fafc" fontcolor="#0b7285"]
+	s2 [label="Related Methods" color="#66d9e8" fillcolor="#e3fafc" fontcolor="#0b7285"]
+	m0 [label="Section focus" color="#fcc419" fillcolor="#fff3bf" fontcolor="#7c5b00"]
+	m1 [label="Technical point" color="#fcc419" fillcolor="#fff3bf" fontcolor="#7c5b00"]
+	m3 [label="Imported Idea Reference" color="#fcc419" fillcolor="#fff3bf" fontcolor="#7c5b00"]
+	c0 [label="Dynamic linear models with Markov-switching C.-J Kim 10.1016/030" color="#9775fa" fillcolor="#f3f0ff" fontcolor="#5f3dc4"]
+	c1 [label="Solutionsto the linear smoothing problem HERauch 10.1109/tac.196" color="#9775fa" fillcolor="#f3f0ff" fontcolor="#5f3dc4"]
+	c2 [label="Dynamic linear models with switching RHShumway DSSto Er J. Amer." color="#9775fa" fillcolor="#f3f0ff" fontcolor="#5f3dc4"]
+	c3 [label="An introduction to hidden Markov models LRRabiner BHJuang 10.110" color="#9775fa" fillcolor="#f3f0ff" fontcolor="#5f3dc4"]
+	root -> s0 [label=scope]
+	root -> s1 [label=scope]
+	root -> s2 [label=scope]
+	s0 -> m0 [label=develops]
+	s0 -> m1 [label=develops]
+	s0 -> m3 [label=develops]
+	root -> c0 [label=uses]
+	root -> c1 [label=uses]
+	root -> c2 [label=uses]
+	root -> c3 [label=uses]
+}

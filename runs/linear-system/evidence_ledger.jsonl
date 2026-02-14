@@ -1,0 +1,3 @@
+{"note_id": "p0_n0", "page": 0, "title": "Guided note", "confidence": 0.82, "flags": ["section_tldr"], "evidence": [{"type": "paper", "pointer": {"page": 0, "block_id": "p0_b10_d79da395", "kind": "section"}, "quote": "Abstract"}]}
+{"note_id": "p0_n1", "page": 0, "title": "Guided note", "confidence": 0.82, "flags": ["section_tldr"], "evidence": [{"type": "paper", "pointer": {"page": 0, "block_id": "p0_b0_7b5327e8", "kind": "section"}, "quote": "P arameter Estimation for Linear Dynamical Systems"}]}
+{"note_id": "p5_n0", "page": 5, "title": "Guided note", "confidence": 0.82, "flags": ["section_tldr"], "evidence": [{"type": "paper", "pointer": {"page": 5, "block_id": "p5_b0_5d20d0fe", "kind": "section"}, "quote": "References"}]}

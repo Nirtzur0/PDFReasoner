@@ -1,0 +1,23 @@
+// PaperCoach Mindmap
+digraph {
+	bgcolor=white nodesep=0.45 rankdir=LR ranksep=0.65 splines=spline
+	node [fontname=Helvetica fontsize=11 shape=box style="rounded,filled"]
+	edge [color="#666666" fontname=Helvetica fontsize=9]
+	root [label=Paper color="#0b7285" fillcolor="#0b7285" fontcolor=white]
+	section_1 [label=Abstract color="#66d9e8" fillcolor="#e3fafc" fontcolor="#0b7285"]
+	result_1 [label="Key Technical Move" color="#fcc419" fillcolor="#fff3bf" fontcolor="#7c5b00"]
+	citation_1 [label="Kim et al., (1994)" color="#66d9e8" fillcolor="#e3fafc" fontcolor="#0b7285"]
+	section_2 [label=References color="#66d9e8" fillcolor="#e3fafc" fontcolor="#0b7285"]
+	method_1 [label="EM Algorithm for Estimating Linear Dynamical System Parameters" color="#fcc419" fillcolor="#fff3bf" fontcolor="#7c5b00"]
+	assumption_1 [label="Initial State Covariance" color="#ff8787" fillcolor="#ffe3e3" fontcolor="#c92a2a"]
+	result_2 [label="Kalman Filter Connection" color="#69db7c" fillcolor="#d3f9d8" fontcolor="#2b8a3e"]
+	citation_2 [label="Shumway and Stoffer, (1991)" color="#66d9e8" fillcolor="#e3fafc" fontcolor="#0b7285"]
+	method_2 [label="Imported Idea Analysis" color="#fcc419" fillcolor="#fff3bf" fontcolor="#7c5b00"]
+	section_1 -> result_1 [label=defines]
+	section_1 -> citation_1 [label=cites]
+	section_2 -> citation_2 [label=cites]
+	result_1 -> method_1 [label=evaluates]
+	method_1 -> assumption_1 [label=depends_on]
+	method_1 -> result_2 [label=produces]
+	root -> method_2 [label=scope]
+}

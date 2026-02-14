@@ -1,0 +1,34 @@
+# Mind Map
+
+```mermaid
+flowchart LR
+    root["Technical Paper"]
+    section_tldr["Abstract"]
+    imported_idea_reference["Dynamic linear models with Markov-switching C.-J Kim"]
+    technical_point_hmm_analogue["Hidden Markov Models L R Rabiner B H Juang"]
+    evaluating_expected_log_likelihood["Likelihood Evaluation and State Estimation for Nonlinear State Space Models C R "]
+    initial_state_covariance_estimation["AN APPROACH TO TIME SERIES SMOOTHING AND FORECASTING USING THE EM ALGORITHM R H "]
+    references["References"]
+    state_estimation_for_nonlinear_state_spa["Likelihood Evaluation and State Estimation for Nonlinear State Space Models C R "]
+    probabilistic_reasoning_in_intelligent_s["Probabilistic Reasoning in Intelligent Systems: Networks of Plausible Inference "]
+    section_tldr -- "defines" --> imported_idea_reference
+    imported_idea_reference -- "evaluates" --> technical_point_hmm_analogue
+    evaluating_expected_log_likelihood -- "builds upon" --> initial_state_covariance_estimation
+    state_estimation_for_nonlinear_state_spa -- "cites" --> probabilistic_reasoning_in_intelligent_s
+    root -- "scope" --> references
+    classDef root fill:#0b7285,color:#fff,stroke:#0b7285,stroke-width:2px;
+    classDef section fill:#e3fafc,stroke:#66d9e8,color:#0b7285;
+    classDef method fill:#fff3bf,stroke:#fcc419,color:#7c5b00;
+    classDef result fill:#d3f9d8,stroke:#69db7c,color:#2b8a3e;
+    classDef assumption fill:#ffe3e3,stroke:#ff8787,color:#c92a2a;
+    classDef citation fill:#f3f0ff,stroke:#9775fa,color:#5f3dc4;
+    class root root;
+    class section_tldr section;
+    class imported_idea_reference citation;
+    class technical_point_hmm_analogue method;
+    class evaluating_expected_log_likelihood result;
+    class initial_state_covariance_estimation method;
+    class references section;
+    class state_estimation_for_nonlinear_state_spa method;
+    class probabilistic_reasoning_in_intelligent_s citation;
+```

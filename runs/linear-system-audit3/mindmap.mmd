@@ -1,0 +1,45 @@
+flowchart LR
+    root["Technical Paper"]
+    1["Scope"]
+    2["Abstract"]
+    3["Method Pipeline"]
+    4["Assumptions"]
+    5["Results"]
+    6["References"]
+    7["Citation 1: Dynamic Linear Models with Markov-Switching"]
+    8["Citation 2: Dynamic Linear Models with Switching"]
+    9["Citation 3: An Introduction to Hidden Markov Models"]
+    10["Citation 4: AN Approach to Time Series Smoothing and Forecasting using the EM Al"]
+    11["Citation 5: Solutions to the Linear Smoothing Problem"]
+    12["Citation 6: Likelihood Evaluation and State Estimation for Nonlinear State Space"]
+    13["Citation 7: Probabilistic Reasoning in Intelligent Systems: Networks of Plausibl"]
+    1 -- "defines" --> 2
+    3 -- "evaluates" --> 4
+    3 -- "computes" --> 5
+    6 -- "cites" --> 7
+    6 -- "cites" --> 8
+    6 -- "cites" --> 9
+    6 -- "cites" --> 10
+    6 -- "cites" --> 11
+    6 -- "cites" --> 12
+    6 -- "cites" --> 13
+    classDef root fill:#0b7285,color:#fff,stroke:#0b7285,stroke-width:2px;
+    classDef section fill:#e3fafc,stroke:#66d9e8,color:#0b7285;
+    classDef method fill:#fff3bf,stroke:#fcc419,color:#7c5b00;
+    classDef result fill:#d3f9d8,stroke:#69db7c,color:#2b8a3e;
+    classDef assumption fill:#ffe3e3,stroke:#ff8787,color:#c92a2a;
+    classDef citation fill:#f3f0ff,stroke:#9775fa,color:#5f3dc4;
+    class root root;
+    class 1 section;
+    class 2 section;
+    class 3 method;
+    class 4 assumption;
+    class 5 result;
+    class 6 section;
+    class 7 citation;
+    class 8 citation;
+    class 9 citation;
+    class 10 citation;
+    class 11 citation;
+    class 12 citation;
+    class 13 citation;

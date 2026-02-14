@@ -1,0 +1,22 @@
+// PaperCoach Mindmap
+digraph {
+	bgcolor=white nodesep=0.45 rankdir=LR ranksep=0.65 splines=spline
+	node [fontname=Helvetica fontsize=11 shape=box style="rounded,filled"]
+	edge [color="#666666" fontname=Helvetica fontsize=9]
+	root [label="Section Goal and Key Technical Move" color="#0b7285" fillcolor="#0b7285" fontcolor=white]
+	paper [label=Paper color="#0b7285" fillcolor="#0b7285" fontcolor=white]
+	abstract [label=Abstract color="#66d9e8" fillcolor="#e3fafc" fontcolor="#0b7285"]
+	references [label=References color="#66d9e8" fillcolor="#e3fafc" fontcolor="#0b7285"]
+	related_methods [label="Related Methods" color="#66d9e8" fillcolor="#e3fafc" fontcolor="#0b7285"]
+	method_pipeline [label="Method Pipeline" color="#fcc419" fillcolor="#fff3bf" fontcolor="#7c5b00"]
+	key_results [label="Key Results" color="#69db7c" fillcolor="#d3f9d8" fontcolor="#2b8a3e"]
+	assumptions [label=Assumptions color="#ff8787" fillcolor="#ffe3e3" fontcolor="#c92a2a"]
+	citations [label=Citations color="#9775fa" fillcolor="#f3f0ff" fontcolor="#5f3dc4"]
+	paper -> abstract [label=defines]
+	paper -> references [label=includes]
+	paper -> related_methods [label=relates]
+	root -> method_pipeline [label=scope]
+	root -> key_results [label=scope]
+	root -> assumptions [label=scope]
+	root -> citations [label=scope]
+}
