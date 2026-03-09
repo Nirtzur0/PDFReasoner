@@ -1,109 +1,118 @@
 from __future__ import annotations
 
-from typing import Literal
-
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 
-class Rect(BaseModel):
+class Box(BaseModel):
     x0: float
     y0: float
     x1: float
     y1: float
 
 
-class SpanRef(BaseModel):
-    page: int
+class Point(BaseModel):
+    x: float
+    y: float
+
+
+class QuadPoints(BaseModel):
+    ul: Point
+    ur: Point
+    ll: Point
+    lr: Point
+
+
+class PromptProfile(BaseModel):
+    density: str
+    audience: str
+    style: str
+    source_links: list[str] = Field(default_factory=list)
+
+
+class CandidateBlock(BaseModel):
     block_id: str
-    span_index: int
-    bbox: list[float]
+    bbox: Box
     text: str
+    section_title: str | None = None
+    is_heading: bool = False
+    word_count: int
 
 
-class TextBlock(BaseModel):
-    page: int
+class HighlightSelection(BaseModel):
+    highlight_id: str
     block_id: str
-    bbox: list[float]
-    text: str
-    font_meta: dict
+    label: str
+    rationale: str
+    confidence: float
+    source_quote: str
+    matched_quote: str
+    quads: list[QuadPoints]
 
 
-class ResolvedRef(BaseModel):
-    doi: str | None = None
-    s2_paper_id: str | None = None
-    title: str | None = None
-    year: int | None = None
-    venue: str | None = None
-    url: str | None = None
-    abstract_snippet: str | None = None
-
-
-class Citation(BaseModel):
-    bib_key: str | None = None
-    raw: str
-    in_text_spans: list[SpanRef] = Field(default_factory=list)
-    resolved: ResolvedRef | None = None
-    mention_count: int = 0
-
-
-class EvidenceRef(BaseModel):
-    type: Literal["paper", "external"]
-    pointer: dict
-    quote: str | None = None
-
-
-class Highlight(BaseModel):
-    page: int
-    bbox: list[float]
-    tag: str
-
-
-class MarginNote(BaseModel):
-    page: int
-    anchor_bbox: list[float]
-    note_bbox: list[float] | None = None
+class NoteSelection(BaseModel):
+    note_id: str
+    highlight_id: str
+    anchor_block_id: str
     title: str
     body: str
-    key_points: list[str] = Field(default_factory=list)
-    evidence: list[EvidenceRef] = Field(default_factory=list)
-    confidence: float = 0.0
-    uncertainties: list[str] = Field(default_factory=list)
-    flags: list[str] = Field(default_factory=list)
-
-    @model_validator(mode="after")
-    def validate_confidence(self) -> "MarginNote":
-        if not self.evidence and self.confidence > 0.35:
-            raise ValueError("Notes without evidence must have confidence <= 0.35")
-        return self
+    confidence: float
 
 
-class GlossaryItem(BaseModel):
-    symbol: str
-    meaning: str | None = None
-    first_occurrence_page: int
-    first_occurrence_bbox: list[float]
-    confidence: float = 0.0
-    evidence: list[EvidenceRef] = Field(default_factory=list)
+class EquationSelection(BaseModel):
+    equation_id: str
+    block_id: str
+    page_number: int
+    equation_text_clean: str
+    source_kind: str
+    equation_label: str | None = None
+    quads: list[QuadPoints]
+    role: str
+    confidence: float
 
 
-class MindmapArtifact(BaseModel):
-    path: str
-    position: Literal["cover", "appendix"]
-    node_count: int
-    edge_count: int
+class EquationExplanation(BaseModel):
+    equation_id: str
+    title: str
+    display_latex: str | None = None
+    symbol_map: dict[str, str] = Field(default_factory=dict)
+    body: str
+    intuition: str
+    confidence: float
 
 
 class PagePlan(BaseModel):
-    page: int
-    highlights: list[Highlight] = Field(default_factory=list)
-    anchors: list[SpanRef] = Field(default_factory=list)
-    notes: list[MarginNote] = Field(default_factory=list)
+    page_number: int
+    width: float
+    height: float
+    is_reference_page: bool
+    candidate_blocks: list[CandidateBlock] = Field(default_factory=list)
+    highlights: list[HighlightSelection] = Field(default_factory=list)
+    notes: list[NoteSelection] = Field(default_factory=list)
+    equations: list[EquationSelection] = Field(default_factory=list)
+    equation_notes: list[EquationExplanation] = Field(default_factory=list)
 
 
-class AnnotationPlan(BaseModel):
+class PaperMeta(BaseModel):
     paper_id: str
-    meta: dict
-    pages: dict[int, PagePlan]
-    references: list[Citation] = Field(default_factory=list)
-    glossary: list[GlossaryItem] = Field(default_factory=list)
-    mindmaps: list[MindmapArtifact] = Field(default_factory=list)
+    title: str
+    input_pdf: str
+    page_count: int
+
+
+class HighlightPlan(BaseModel):
+    meta: PaperMeta
+    prompt_profile: PromptProfile
+    pages: list[PagePlan]
+
+
+class RunManifest(BaseModel):
+    input_pdf: str
+    output_pdf: str
+    plan_path: str
+    trace_path: str
+    model: str
+    highlight_count: int
+    pages_with_highlights: int
+    note_count: int
+    equation_count: int = 0
+    equation_note_count: int = 0

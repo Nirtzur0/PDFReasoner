@@ -1,22 +1,15 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
+import os
 from pathlib import Path
-from typing import Literal
-
-
-Level = Literal["light", "medium", "heavy"]
-MindmapPosition = Literal["cover", "appendix"]
 
 
 @dataclass(slots=True)
 class ServiceConfig:
-    grobid_url: str = os.getenv("PAPERCOACH_GROBID_URL", "http://localhost:8070")
-    ollama_url: str = os.getenv("PAPERCOACH_OLLAMA_URL", "http://localhost:11434")
-    ollama_model: str = os.getenv("PAPERCOACH_OLLAMA_MODEL", "llama3.1:8b-instruct-q8_0")
-    crossref_url: str = "https://api.crossref.org"
-    semanticscholar_url: str = "https://api.semanticscholar.org/graph/v1"
+    base_url: str | None = os.getenv("PAPERCOACH_BASE_URL")
+    api_key: str | None = os.getenv("PAPERCOACH_API_KEY")
+    model: str = os.getenv("PAPERCOACH_MODEL", "gpt-5")
 
 
 @dataclass(slots=True)
@@ -24,16 +17,22 @@ class RunConfig:
     input_pdf: Path
     out_pdf: Path
     workdir: Path
-    level: Level = "medium"
-    margin_width: float = 180.0
-    max_notes_per_page: int = 8
-    no_web: bool = False
-    mindmap_position: MindmapPosition = "appendix"
+    density: str = "balanced"
+    style: str = "minimal"
+    audience: str = "paper-native"
+    max_highlights_per_page: int = 3
+    margin_width: float = 240.0
+    max_notes_per_page: int = 3
+    max_equations_per_page: int = 2
 
     @property
-    def top_n_references(self) -> int:
-        if self.level == "light":
-            return 5
-        if self.level == "heavy":
-            return 20
-        return 10
+    def plan_path(self) -> Path:
+        return self.workdir / "highlight_plan.json"
+
+    @property
+    def manifest_path(self) -> Path:
+        return self.workdir / "run_manifest.json"
+
+    @property
+    def trace_path(self) -> Path:
+        return self.workdir / "trace.jsonl"

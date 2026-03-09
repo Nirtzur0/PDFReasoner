@@ -1,1 +1,1 @@
-"""Rendering modules for PaperCoach."""
+"""Rendering helpers for PaperCoach."""

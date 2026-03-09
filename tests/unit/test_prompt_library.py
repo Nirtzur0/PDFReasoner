@@ -1,55 +1,111 @@
 from __future__ import annotations
 
-from papercoach.analyze.prompt_library import build_note_prompt
-from papercoach.models import EvidenceRef
+from papercoach.extract.extractor import PdfExtractor
+from papercoach.llm.prompt_library import PromptLibrary
 
 
-def test_prompt_library_includes_task_breakdown_and_evidence_ids() -> None:
-    prompt = build_note_prompt(
-        anchor_text="x_t = A x_t-1 + w_t",
-        context="State transition equation for the latent dynamics.",
-        evidence=[
-            EvidenceRef(type="paper", pointer={"page": 1}, quote="x_t = A x_t-1 + w_t"),
-            EvidenceRef(type="paper", pointer={"page": 1}, quote="w_t is Gaussian noise"),
+def test_prompt_library_exposes_balanced_paper_native_profile(sample_pdf) -> None:
+    document = PdfExtractor().extract(sample_pdf)
+    blocks = [block for page in document.pages for block in page.blocks if not block.is_heading]
+    library = PromptLibrary()
+
+    profile = library.profile("balanced", "paper-native", "minimal")
+    _, user_prompt = library.document_selection_prompts(blocks, document, 4, [{"idea_id": "idea-1", "title": "Core idea"}])
+    _, idea_prompt = library.key_idea_prompt(document, blocks, 4)
+
+    assert profile.density == "balanced"
+    assert profile.audience == "paper-native"
+    assert "TASK_KIND: document_selection" in user_prompt
+    assert "key ideas to drive coverage" in user_prompt
+    assert "TASK_KIND: key_idea_extraction" in idea_prompt
+    assert "PAYLOAD_JSON_START" in user_prompt
+
+
+def test_note_prompt_is_local_and_non_generic(sample_pdf) -> None:
+    document = PdfExtractor().extract(sample_pdf)
+    library = PromptLibrary()
+
+    _, user_prompt = library.note_prompt(
+        document,
+        1,
+        [
+            {
+                "highlight_id": "h1",
+                "label": "method",
+                "section_title": "Method",
+                "matched_quote": "This keeps highlights precise.",
+                "local_context": "Method Our method extracts block-level text with word coordinates and aligns a contiguous quote back to the PDF words.",
+                "section_context": "The method section explains extraction, alignment, and rendering constraints for the full pipeline.",
+                "paper_context": "This paper builds a PDF-native highlighting system for research study workflows.",
+                "article_context": "Full paper text goes here with all sections in order.",
+                "idea_context": "Core pipeline idea: preserve precise PDF-native anchoring.",
+                "focus_question": "Explain what technical role this sentence plays in the method.",
+            }
         ],
-        note_kind="equation",
     )
-    assert "Task type: equation" in prompt
-    assert "Problem breakdown:" in prompt
-    assert "Allowed evidence IDs: e0, e1" in prompt
+
+    assert "local technical role" in user_prompt
+    assert "full article text" in user_prompt
+    assert "specific target line or idea" in user_prompt
+    assert "linked key idea" in user_prompt
+    assert "focus question" in user_prompt
+    assert "Do not write review-summary prose" in user_prompt
+    assert "Do not use LaTeX" in user_prompt
+    assert "PhD reader" in user_prompt
 
 
-def test_prompt_library_lists_notation_tokens() -> None:
-    prompt = build_note_prompt(
-        anchor_text="The filter uses K_t and P_t to update x_t.",
-        context="Kalman gain K_t controls correction while P_t tracks covariance.",
-        evidence=[EvidenceRef(type="paper", pointer={"page": 2}, quote="K_t = P_t C^T (...)")],
-        note_kind="page_tldr",
+def test_equation_prompts_are_structured(sample_pdf) -> None:
+    document = PdfExtractor().extract(sample_pdf)
+    library = PromptLibrary()
+
+    _, candidate_prompt = library.equation_candidate_prompt(
+        document,
+        [
+            type(
+                "Candidate",
+                (),
+                {
+                    "equation_id": "eq1",
+                    "block_id": "p1-b1",
+                    "page_number": 1,
+                    "equation_text_clean": "z = x + y",
+                    "equation_label": "(1)",
+                    "source_kind": "equation",
+                    "section_title": "Method",
+                    "local_context": "We define z as the sum of x and y.",
+                    "symbol_context": "where z is score, x is method score, y is result score",
+                },
+            )()
+        ],
     )
-    assert "Notation to preserve:" in prompt
-    assert "K_t" in prompt
-    assert "P_t" in prompt
-
-
-def test_prompt_library_adds_expert_scope_calibration() -> None:
-    prompt = build_note_prompt(
-        anchor_text="This section applies optimal filtering to switched state-space dynamics.",
-        context="The derivation focuses on parameter updates rather than introductory motivation.",
-        evidence=[EvidenceRef(type="paper", pointer={"page": 2}, quote="applies optimal filtering to switched dynamics")],
-        note_kind="page_tldr",
+    _, explain_prompt = library.equation_explanation_prompt(
+        document,
+        1,
+        [
+            {
+                "equation_id": "eq1",
+                "equation_label": "(1)",
+                "equation_text_clean": "z = x + y",
+                "source_kind": "equation",
+                "section_title": "Method",
+                "role": "definition",
+                "local_context": "We define z as the sum of x and y.",
+                "symbol_context": "where z is score, x is method score, y is result score",
+                "page_context": "Full page context with surrounding derivation.",
+                "section_context": "Section-level context describing the objective and notation.",
+                "paper_context": "Paper overview context tying this equation to the larger method.",
+                "article_context": "Full article text tying this equation to the full method and results.",
+                "focus_question": "Explain what this equation is doing in the paper.",
+            }
+        ],
     )
-    assert "Scope calibration:" in prompt
-    assert "Assume a technically fluent reader" in prompt
-    assert "Do not define baseline terms unless locally defined in evidence" in prompt
-    assert "optimal filtering" in prompt
 
-
-def test_prompt_library_allows_local_definition_when_explicit() -> None:
-    prompt = build_note_prompt(
-        anchor_text="Optimal filtering is defined here as minimizing expected squared error.",
-        context="The text denotes optimal filtering as an MMSE estimator in this setup.",
-        evidence=[EvidenceRef(type="paper", pointer={"page": 1}, quote="optimal filtering is defined as minimizing expected squared error")],
-        note_kind="section_tldr",
-    )
-    assert "Scope calibration:" in prompt
-    assert "Optimal filtering is defined here" in prompt
+    assert "TASK_KIND: equation_candidate_screen" in candidate_prompt
+    assert "TASK_KIND: equation_explanation" in explain_prompt
+    assert '"symbol_map"' in explain_prompt
+    assert '"display_latex"' in explain_prompt
+    assert '"page_context"' in explain_prompt
+    assert '"article_context"' in explain_prompt
+    assert '"focus_question"' in explain_prompt
+    assert "specific target inside the full article" in explain_prompt
+    assert "Do not invent symbol meanings" in explain_prompt

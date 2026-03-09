@@ -1,7 +1,0 @@
-// PaperCoach Mindmap
-digraph {
-	rankdir=LR
-	"sec:Abstract:0" [label=Abstract]
-	"sec:References:5" [label=References]
-	"sec:Paper Overview:0" [label="Paper Overview"]
-}
