@@ -5,6 +5,7 @@ from pathlib import Path
 
 from papercoach.config import RunConfig, ServiceConfig
 from papercoach.pipeline import PaperCoachPipeline, build_default_out_path
+from papercoach.web.app import create_app
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,6 +27,10 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--margin-width", type=float, default=240.0)
     render.add_argument("--max-notes-per-page", type=int, default=3)
     render.add_argument("--max-equations-per-page", type=int, default=2)
+
+    serve = subparsers.add_parser("serve")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8000)
 
     return parser
 
@@ -81,6 +86,12 @@ def main(argv: list[str] | None = None) -> int:
             max_equations_per_page=args.max_equations_per_page,
         )
         pipeline.render_highlights(run, args.plan_json)
+        return 0
+
+    if args.command == "serve":
+        import uvicorn
+
+        uvicorn.run(create_app(), host=args.host, port=args.port)
         return 0
 
     raise AssertionError("unreachable")

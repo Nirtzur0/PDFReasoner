@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}PaperCoach | {{ job.title_or_filename }}{% endblock %}
+
+{% block content %}
+<main class="page page-job" data-job-page data-poll-url="{{ poll_url }}">
+  <section class="detail-hero">
+    <div>
+      <p class="eyebrow">Run detail</p>
+      <h1 data-job-title>{{ job.title_or_filename }}</h1>
+      <p class="detail-filename">{{ job.filename }}</p>
+    </div>
+    <div class="detail-actions">
+      <span class="status-badge status-{{ job.status }}" data-job-status>{{ job.status_label }}</span>
+      <a
+        class="secondary-button {% if not job.annotated_pdf_url %}is-disabled{% endif %}"
+        href="{{ job.annotated_pdf_url or '#' }}"
+        {% if not job.annotated_pdf_url %}aria-disabled="true"{% endif %}
+        data-download-link
+      >Open annotated PDF</a>
+    </div>
+  </section>
+
+  <section class="detail-grid">
+    <aside class="detail-sidebar">
+      <article class="info-card">
+        <p class="card-kicker">Run state</p>
+        <h2>Pipeline progress</h2>
+        <p class="status-copy" data-status-copy>
+          {% if job.status == "queued" %}
+          Waiting for a worker to pick up the run.
+          {% elif job.status == "running" %}
+          Extracting structure, generating selections, and rendering the annotated PDF.
+          {% elif job.status == "failed" %}
+          {{ job.error }}
+          {% else %}
+          The annotated PDF is ready for viewing and download.
+          {% endif %}
+        </p>
+      </article>
+
+      <article class="info-card">
+        <p class="card-kicker">Counts</p>
+        <h2>Study artifacts</h2>
+        <dl class="job-stats">
+          <div>
+            <dt>Highlights</dt>
+            <dd data-count-highlights>{{ job.counts.highlights }}</dd>
+          </div>
+          <div>
+            <dt>Notes</dt>
+            <dd data-count-notes>{{ job.counts.notes }}</dd>
+          </div>
+          <div>
+            <dt>Equations</dt>
+            <dd data-count-equations>{{ job.counts.equations }}</dd>
+          </div>
+          <div>
+            <dt>Equation notes</dt>
+            <dd data-count-equation-notes>{{ job.counts.equation_notes }}</dd>
+          </div>
+        </dl>
+      </article>
+    </aside>
+
+    <section class="viewer-panel">
+      <div class="viewer-frame" data-viewer-shell>
+        {% if job.annotated_pdf_url %}
+        <iframe src="{{ job.annotated_pdf_url }}" title="Annotated PDF" data-annotated-viewer></iframe>
+        {% else %}
+        <div class="viewer-placeholder">
+          <p>The viewer will appear here as soon as the annotated PDF is ready.</p>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+  </section>
+</main>
+{% endblock %}

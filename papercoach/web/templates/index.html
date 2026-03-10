@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}PaperCoach | Research PDF Studio{% endblock %}
+
+{% block content %}
+<main class="page page-home {% if design_preview %}is-preview{% endif %}">
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Research PDF Studio</p>
+      <h1>Upload papers, extract the key moves, and read the annotated result in one place.</h1>
+      <p class="lede">
+        PaperCoach turns born-digital PDFs into study-ready versions with highlights, margin notes,
+        and equation explanations, then keeps the latest runs visible in a clean reading workspace.
+      </p>
+      <div class="hero-metrics">
+        <article>
+          <strong>PDF in</strong>
+          <span>Upload a paper and preserve the original file in a durable run folder.</span>
+        </article>
+        <article>
+          <strong>Background run</strong>
+          <span>Processing happens off the request thread with explicit queued, running, and failed states.</span>
+        </article>
+        <article>
+          <strong>Annotated out</strong>
+          <span>Read the rendered PDF in-app or open the generated file directly.</span>
+        </article>
+      </div>
+    </div>
+    <div class="upload-card">
+      <p class="card-kicker">Start a run</p>
+      <h2>Add a paper</h2>
+      <p class="card-copy">PaperCoach accepts born-digital PDFs and keeps each run available in your recent library.</p>
+      {% if error %}
+      <div class="alert">{{ error }}</div>
+      {% endif %}
+      <form class="upload-form" action="/jobs" method="post" enctype="multipart/form-data">
+        <label class="file-drop">
+          <input type="file" name="file" accept="application/pdf,.pdf" required>
+          <span class="file-drop-title">Choose a PDF</span>
+          <span class="file-drop-copy">Drag a paper here or browse from disk.</span>
+        </label>
+        <button type="submit" class="primary-button">Process paper</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="recent-section">
+    <div class="section-header">
+      <div>
+        <p class="eyebrow">Recent papers</p>
+        <h2>Persistent run history</h2>
+      </div>
+      <p class="section-copy">Each card reflects the on-disk job manifest, so refreshes and restarts preserve the current state.</p>
+    </div>
+
+    {% if recent_jobs %}
+    <div class="job-grid">
+      {% for job in recent_jobs %}
+      <article class="job-card status-{{ job.status }}">
+        <div class="job-card-header">
+          <div>
+            <p class="job-status">{{ job.status_label }}</p>
+            <h3><a href="{{ job.detail_url }}">{{ job.title_or_filename }}</a></h3>
+          </div>
+          <span class="pill">{{ job.filename }}</span>
+        </div>
+        <dl class="job-stats">
+          <div>
+            <dt>Highlights</dt>
+            <dd>{{ job.counts.highlights }}</dd>
+          </div>
+          <div>
+            <dt>Notes</dt>
+            <dd>{{ job.counts.notes }}</dd>
+          </div>
+          <div>
+            <dt>Equations</dt>
+            <dd>{{ job.counts.equations }}</dd>
+          </div>
+        </dl>
+        {% if job.error %}
+        <p class="job-error">{{ job.error }}</p>
+        {% else %}
+        <p class="job-meta">Updated {{ job.updated_at }}</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <p>No runs yet. Upload a PDF to create the first annotated paper.</p>
+    </div>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}

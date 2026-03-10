@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}PaperCoach{% endblock %}</title>
+    <link rel="icon" href="{{ request.url_for('static', path='favicon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='site.css') }}">
+    {% if design_preview %}
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+    {% endif %}
+    <script defer src="{{ request.url_for('static', path='app.js') }}"></script>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/">PaperCoach</a>
+        <nav class="topnav">
+          <a href="/">Home</a>
+          <a href="/design-preview">Design Preview</a>
+        </nav>
+      </header>
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

@@ -12,6 +12,10 @@ dependencies = [
   "pydantic>=2.7",
   "pymupdf>=1.24",
   "matplotlib>=3.8",
+  "fastapi>=0.115,<0.116",
+  "jinja2>=3.1",
+  "python-multipart>=0.0.20,<0.0.21",
+  "uvicorn>=0.34,<0.35",
 ]
 
 [project.optional-dependencies]
@@ -28,7 +32,11 @@ packages = [
   "papercoach.extract",
   "papercoach.llm",
   "papercoach.render",
+  "papercoach.web",
 ]
+
+[tool.setuptools.package-data]
+"papercoach.web" = ["templates/*.html", "static/*.css", "static/*.js"]
 
 [tool.pytest.ini_options]
 addopts = "-q"

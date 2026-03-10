@@ -24,3 +24,11 @@ papercoach/render/__init__.py
 papercoach/render/layout.py
 papercoach/render/math_renderer.py
 papercoach/render/pdf_renderer.py
+papercoach/web/__init__.py
+papercoach/web/app.py
+papercoach/web/jobs.py
+papercoach/web/static/app.js
+papercoach/web/static/site.css
+papercoach/web/templates/base.html
+papercoach/web/templates/index.html
+papercoach/web/templates/job.html
