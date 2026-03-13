@@ -32,6 +32,30 @@ def test_pipeline_builds_plan_and_rendered_pdf(
     assert sum(len(page.equations) for page in plan.pages) >= 1
     assert sum(len(page.equation_notes) for page in plan.pages) >= 1
 
+    trace_events = [
+        json.loads(line)
+        for line in workdir.joinpath("trace.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    note_requests = [
+        event
+        for event in trace_events
+        if event.get("type") == "request" and event.get("prompt_name") == "note_generation"
+    ]
+    assert len(note_requests) == 1
+    equation_explanation_requests = [
+        event
+        for event in trace_events
+        if event.get("type") == "request" and event.get("prompt_name") == "equation_explanation"
+    ]
+    equation_evaluation_requests = [
+        event
+        for event in trace_events
+        if event.get("type") == "request" and event.get("prompt_name") == "equation_evaluation"
+    ]
+    assert len(equation_explanation_requests) == 1
+    assert len(equation_evaluation_requests) == 1
+
     with fitz.open(out_pdf) as document, fitz.open(sample_pdf) as original:
         assert document.page_count == 2
         assert document[0].first_annot is not None

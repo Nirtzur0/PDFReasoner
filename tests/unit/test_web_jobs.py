@@ -5,7 +5,7 @@ from pathlib import Path
 from papercoach.web.jobs import DiskJobStore, JobCounts, JobRecord, is_pdf_upload
 
 
-def test_job_record_api_payload_sets_pdf_url_only_for_completed_runs() -> None:
+def test_job_record_api_payload_uses_explicit_urls() -> None:
     queued = JobRecord(
         job_id="job-1",
         filename="paper.pdf",
@@ -16,7 +16,14 @@ def test_job_record_api_payload_sets_pdf_url_only_for_completed_runs() -> None:
     succeeded = queued.model_copy(update={"status": "succeeded"})
 
     assert queued.to_api_payload()["annotated_pdf_url"] is None
-    assert succeeded.to_api_payload()["annotated_pdf_url"] == "/files/job-1/annotated.pdf"
+    payload = succeeded.to_api_payload(
+        annotated_pdf_url="/api/jobs/job-1/annotated.pdf",
+        viewer_url="/static/pdfjs/web/viewer.html?file=%2Fapi%2Fjobs%2Fjob-1%2Fannotated.pdf#zoom=page-width",
+    )
+    assert payload["annotated_pdf_url"] == "/api/jobs/job-1/annotated.pdf"
+    assert payload["viewer_url"] == (
+        "/static/pdfjs/web/viewer.html?file=%2Fapi%2Fjobs%2Fjob-1%2Fannotated.pdf#zoom=page-width"
+    )
 
 
 def test_disk_job_store_roundtrips_and_updates_job_state(tmp_path: Path) -> None:

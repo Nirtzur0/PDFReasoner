@@ -6,9 +6,7 @@
     <title>{% block title %}PaperCoach{% endblock %}</title>
     <link rel="icon" href="{{ request.url_for('static', path='favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ request.url_for('static', path='site.css') }}">
-    {% if design_preview %}
     <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
-    {% endif %}
     <script defer src="{{ request.url_for('static', path='app.js') }}"></script>
   </head>
   <body>

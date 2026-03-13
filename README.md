@@ -11,13 +11,35 @@ python3 -m pip install -e '.[dev]'
 
 ## Backend
 
-PaperCoach expects a ChatMock OpenAI-compatible endpoint.
+PaperCoach expects an OpenAI-compatible endpoint. By default it talks to a local
+ChatMock instance at `http://127.0.0.1:8000/v1` using a placeholder API key. If
+`OPENAI_API_KEY` is set, PaperCoach switches to the OpenAI API by default instead.
+Use `PAPERCOACH_*` to override either default explicitly.
+
+### Local ChatMock default
+
+No extra backend environment variables are required if ChatMock is already running
+on its default local endpoint.
+
+### OpenAI default
 
 ```bash
-export PAPERCOACH_BASE_URL=http://127.0.0.1:8000/v1
+export OPENAI_API_KEY=your-key
+export PAPERCOACH_MODEL=gpt-5
+```
+
+### Custom compatible backend
+
+```bash
+export PAPERCOACH_BASE_URL=http://127.0.0.1:8001/v1
 export PAPERCOACH_API_KEY=dummy
 export PAPERCOACH_MODEL=gpt-5
 ```
+
+## Web app
+
+The web UI serves on `http://127.0.0.1:8080` by default so it does not collide
+with ChatMock's default `127.0.0.1:8000` listener.
 
 The implementation is based on:
 

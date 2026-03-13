@@ -77,9 +77,9 @@ class ChatMockClient:
 
     def _validate_config(self) -> None:
         if not self._config.base_url:
-            raise ValueError("PAPERCOACH_BASE_URL is required")
+            raise ValueError("PAPERCOACH_BASE_URL or OPENAI_BASE_URL must resolve to an OpenAI-compatible endpoint")
         if not self._config.api_key:
-            raise ValueError("PAPERCOACH_API_KEY is required")
+            raise ValueError("PAPERCOACH_API_KEY or OPENAI_API_KEY must resolve to a non-empty value")
 
     def _request_json(self, method: str, path: str, payload: dict[str, Any] | None) -> dict[str, Any]:
         if self._config.base_url is None:

@@ -36,7 +36,22 @@ packages = [
 ]
 
 [tool.setuptools.package-data]
-"papercoach.web" = ["templates/*.html", "static/*.css", "static/*.js"]
+"papercoach.web" = [
+  "templates/*.html",
+  "static/*.css",
+  "static/*.js",
+  "static/pdfjs/LICENSE",
+  "static/pdfjs/README.md",
+  "static/pdfjs/build/*",
+  "static/pdfjs/web/*",
+  "static/pdfjs/web/cmaps/*",
+  "static/pdfjs/web/iccs/*",
+  "static/pdfjs/web/images/*",
+  "static/pdfjs/web/locale/*",
+  "static/pdfjs/web/locale/*/*",
+  "static/pdfjs/web/standard_fonts/*",
+  "static/pdfjs/web/wasm/*",
+]
 
 [tool.pytest.ini_options]
 addopts = "-q"

@@ -319,30 +319,34 @@ class HighlightPlanner:
         block_map: dict[str, ExtractedBlock],
         key_ideas: list[dict],
     ) -> dict[str, dict]:
-        out: dict[str, dict] = {}
+        request_items: list[dict] = []
+        requested_ids: set[str] = set()
         for highlight in highlights:
             block = block_map.get(highlight.block_id)
             if block is None:
                 continue
-            request_item = self._note_request_item(page_blocks, document, block, highlight, key_ideas)
-            system_prompt, user_prompt = self._prompt_library.note_prompt(document, page_number, [request_item])
-            note_json = self._llm.create_json_response(
-                "note_generation",
-                system_prompt,
-                user_prompt,
-                max_output_tokens=800,
-            )
-            notes = note_json.get("notes", [])
-            if not isinstance(notes, list):
+            request_items.append(self._note_request_item(page_blocks, document, block, highlight, key_ideas))
+            requested_ids.add(highlight.highlight_id)
+        if not request_items:
+            return {}
+        system_prompt, user_prompt = self._prompt_library.note_prompt(document, page_number, request_items)
+        note_json = self._llm.create_json_response(
+            "note_generation",
+            system_prompt,
+            user_prompt,
+            max_output_tokens=2200,
+        )
+        notes = note_json.get("notes", [])
+        if not isinstance(notes, list):
+            return {}
+        out: dict[str, dict] = {}
+        for note in notes:
+            highlight_id = str(note.get("highlight_id", "")).strip()
+            title = str(note.get("title", "")).strip()
+            body = str(note.get("body", "")).strip()
+            if highlight_id not in requested_ids or not title or not body or highlight_id in out:
                 continue
-            for note in notes:
-                highlight_id = str(note.get("highlight_id", "")).strip()
-                title = str(note.get("title", "")).strip()
-                body = str(note.get("body", "")).strip()
-                if highlight_id != highlight.highlight_id or not title or not body:
-                    continue
-                out[highlight_id] = note
-                break
+            out[highlight_id] = note
         return out
 
     def _extract_key_ideas(
@@ -479,34 +483,46 @@ class HighlightPlanner:
         equations: list[tuple[EquationCandidate, dict]],
         page_equations: dict[str, EquationSelection],
     ) -> list[EquationExplanation]:
-        out: list[EquationExplanation] = []
+        payload_items: list[dict] = []
+        candidate_by_id: dict[str, EquationCandidate] = {}
         for candidate, _selection in equations:
             if candidate.equation_id not in page_equations:
                 continue
             payload_item = self._equation_request_item(document, candidate, page_equations[candidate.equation_id].role)
-            raw = self._request_equation_explanation(document, page_number, payload_item)
+            payload_items.append(payload_item)
+            candidate_by_id[candidate.equation_id] = candidate
+        if not payload_items:
+            return []
+
+        explanations_by_id = self._request_equation_explanations(document, page_number, payload_items)
+        evaluations_by_id = self._evaluate_equation_explanations(document, page_number, payload_items, explanations_by_id)
+        out: list[EquationExplanation] = []
+        for payload_item in payload_items:
+            equation_id = payload_item["equation_id"]
+            candidate = candidate_by_id[equation_id]
+            raw = explanations_by_id.get(equation_id)
             if raw is None:
                 continue
-            passed, feedback = self._evaluate_equation_explanation(document, page_number, payload_item, raw)
+            passed, feedback = evaluations_by_id.get(equation_id, (False, "No equation evaluation returned."))
             if not passed:
                 retry_item = dict(payload_item)
                 retry_item["review_feedback"] = feedback
-                retried = self._request_equation_explanation(
+                retried = self._request_equation_explanations(
                     document,
                     page_number,
-                    retry_item,
+                    [retry_item],
                     prompt_name="equation_explanation_retry",
-                )
+                ).get(equation_id)
                 if retried is None:
                     continue
                 raw = retried
-                passed, feedback = self._evaluate_equation_explanation(
+                passed, feedback = self._evaluate_equation_explanations(
                     document,
                     page_number,
-                    payload_item,
-                    raw,
+                    [payload_item],
+                    {equation_id: raw},
                     prompt_name="equation_evaluation_retry",
-                )
+                ).get(equation_id, (False, "No equation evaluation returned."))
             if not passed:
                 continue
             explanation = EquationExplanation(
@@ -525,15 +541,17 @@ class HighlightPlanner:
             )
         return out
 
-    def _request_equation_explanation(
+    def _request_equation_explanations(
         self,
         document: ExtractedDocument,
         page_number: int,
-        payload_item: dict,
+        payload_items: list[dict],
         prompt_name: str = "equation_explanation",
-    ) -> dict | None:
-        system_prompt, user_prompt = self._prompt_library.equation_explanation_prompt(document, page_number, [payload_item])
+    ) -> dict[str, dict]:
+        system_prompt, user_prompt = self._prompt_library.equation_explanation_prompt(document, page_number, payload_items)
         response = self._llm.create_json_response(prompt_name, system_prompt, user_prompt, max_output_tokens=2200)
+        requested_ids = {item["equation_id"] for item in payload_items}
+        out: dict[str, dict] = {}
         for item in response.get("explanations", []):
             equation_id = str(item.get("equation_id", "")).strip()
             role = str(item.get("equation_role", "")).strip()
@@ -541,46 +559,56 @@ class HighlightPlanner:
             display_latex = str(item.get("display_latex", "")).strip()
             body = str(item.get("plain_explanation", "")).strip()
             intuition = str(item.get("intuition_or_consequence", "")).strip()
-            if equation_id != payload_item["equation_id"]:
+            if equation_id not in requested_ids or equation_id in out:
                 continue
             if role not in _VALID_EQUATION_ROLES or not title or not display_latex or not body or not intuition:
                 continue
-            return item
-        return None
+            out[equation_id] = item
+        return out
 
-    def _evaluate_equation_explanation(
+    def _evaluate_equation_explanations(
         self,
         document: ExtractedDocument,
         page_number: int,
-        payload_item: dict,
-        explanation: dict,
+        payload_items: list[dict],
+        explanations_by_id: dict[str, dict],
         prompt_name: str = "equation_evaluation",
-    ) -> tuple[bool, str]:
-        evaluation_item = {
-            "equation_id": payload_item["equation_id"],
-            "equation_label": payload_item.get("equation_label"),
-            "equation_text_clean": payload_item["equation_text_clean"],
-            "local_context": payload_item["local_context"],
-            "symbol_context": payload_item["symbol_context"],
-            "page_context": payload_item["page_context"],
-            "section_context": payload_item["section_context"],
-            "paper_context": payload_item["paper_context"],
-            "article_context": payload_item["article_context"],
-            "focus_question": payload_item["focus_question"],
-            "display_latex": explanation.get("display_latex", ""),
-            "equation_role": explanation["equation_role"],
-            "symbol_map": explanation.get("symbol_map", {}),
-            "plain_explanation": explanation["plain_explanation"],
-            "intuition_or_consequence": explanation["intuition_or_consequence"],
-        }
-        system_prompt, user_prompt = self._prompt_library.equation_evaluation_prompt(document, page_number, [evaluation_item])
+    ) -> dict[str, tuple[bool, str]]:
+        evaluation_items = []
+        for payload_item in payload_items:
+            explanation = explanations_by_id.get(payload_item["equation_id"])
+            if explanation is None:
+                continue
+            evaluation_items.append(
+                {
+                    "equation_id": payload_item["equation_id"],
+                    "equation_label": payload_item.get("equation_label"),
+                    "equation_text_clean": payload_item["equation_text_clean"],
+                    "local_context": payload_item["local_context"],
+                    "symbol_context": payload_item["symbol_context"],
+                    "page_context": payload_item["page_context"],
+                    "section_context": payload_item["section_context"],
+                    "paper_context": payload_item["paper_context"],
+                    "article_context": payload_item["article_context"],
+                    "focus_question": payload_item["focus_question"],
+                    "display_latex": explanation.get("display_latex", ""),
+                    "equation_role": explanation["equation_role"],
+                    "symbol_map": explanation.get("symbol_map", {}),
+                    "plain_explanation": explanation["plain_explanation"],
+                    "intuition_or_consequence": explanation["intuition_or_consequence"],
+                }
+            )
+        if not evaluation_items:
+            return {}
+        system_prompt, user_prompt = self._prompt_library.equation_evaluation_prompt(document, page_number, evaluation_items)
         response = self._llm.create_json_response(prompt_name, system_prompt, user_prompt, max_output_tokens=1400)
+        out: dict[str, tuple[bool, str]] = {}
         for item in response.get("evaluations", []):
             equation_id = str(item.get("equation_id", "")).strip()
-            if equation_id != payload_item["equation_id"]:
+            if equation_id not in explanations_by_id or equation_id in out:
                 continue
-            return (bool(item.get("pass")), str(item.get("feedback", "")).strip())
-        return (False, "No equation evaluation returned.")
+            out[equation_id] = (bool(item.get("pass")), str(item.get("feedback", "")).strip())
+        return out
 
     def _candidate_block(self, block: ExtractedBlock) -> CandidateBlock:
         return CandidateBlock(

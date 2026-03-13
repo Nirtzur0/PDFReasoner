@@ -4,33 +4,92 @@
 
 {% block content %}
 <main class="page page-job" data-job-page data-poll-url="{{ poll_url }}">
-  <section class="detail-hero">
-    <div>
-      <p class="eyebrow">Run detail</p>
-      <h1 data-job-title>{{ job.title_or_filename }}</h1>
-      <p class="detail-filename">{{ job.filename }}</p>
-    </div>
-    <div class="detail-actions">
-      <span class="status-badge status-{{ job.status }}" data-job-status>{{ job.status_label }}</span>
-      <a
-        class="secondary-button {% if not job.annotated_pdf_url %}is-disabled{% endif %}"
-        href="{{ job.annotated_pdf_url or '#' }}"
-        {% if not job.annotated_pdf_url %}aria-disabled="true"{% endif %}
-        data-download-link
-      >Open annotated PDF</a>
-    </div>
-  </section>
-
   <section class="detail-grid">
     <aside class="detail-sidebar">
+      <article class="info-card detail-summary">
+        <p class="card-kicker">Run detail</p>
+        <h1 class="detail-title" data-job-title>{{ job.title_or_filename }}</h1>
+        <p class="detail-filename">{{ job.filename }}</p>
+        <div class="detail-actions">
+          <span class="status-badge status-{{ job.status }}" data-job-status>{{ job.status_label }}</span>
+          <a
+            class="secondary-button {% if not job.annotated_pdf_url %}is-disabled{% endif %}"
+            href="{{ job.annotated_pdf_url or '#' }}"
+            {% if not job.annotated_pdf_url %}aria-disabled="true"{% endif %}
+            data-download-link
+          >Open annotated PDF</a>
+        </div>
+      </article>
+
       <article class="info-card">
-        <p class="card-kicker">Run state</p>
-        <h2>Pipeline progress</h2>
+        <p class="card-kicker">Pipeline progress</p>
+        <h2>Live run status</h2>
+        <div class="progress-panel" data-progress-panel>
+          <div class="progress-stage">
+            <p class="progress-stage-kicker" data-progress-stage-count>
+              {% if job.status == "running" and job.progress %}
+              Stage {{ job.progress.stage_index }} of {{ job.progress.total_stages }}
+              {% elif job.status == "succeeded" %}
+              Pipeline complete
+              {% elif job.status == "failed" %}
+              Pipeline stopped
+              {% else %}
+              Preparing run
+              {% endif %}
+            </p>
+            <h3 class="progress-stage-title" data-progress-stage-title>
+              {% if job.status == "running" and job.progress %}
+              {{ job.progress.stage_title }}
+              {% elif job.status == "succeeded" %}
+              Annotated PDF ready
+              {% elif job.status == "failed" %}
+              Run failed
+              {% else %}
+              Waiting to begin
+              {% endif %}
+            </h3>
+            <p class="progress-stage-detail" data-progress-stage-detail>
+              {% if job.status == "running" and job.progress %}
+              {{ job.progress.stage_detail }}
+              {% elif job.status == "succeeded" %}
+              The run finished and the annotated PDF can now be opened.
+              {% elif job.status == "failed" %}
+              {{ job.error or "The pipeline stopped before the annotated PDF was ready." }}
+              {% else %}
+              Waiting for the worker to start the first model step.
+              {% endif %}
+            </p>
+          </div>
+          <div class="progress-meter-row">
+            <div class="progress-meter" aria-hidden="true">
+              <span data-progress-fill style="width: {{ job.progress.progress_percent if job.progress and job.status == 'running' else 100 if job.status == 'succeeded' else 0 }}%"></span>
+            </div>
+            <strong class="progress-percent" data-progress-percent>
+              {% if job.status == "running" and job.progress %}
+              {{ job.progress.progress_percent }}%
+              {% elif job.status == "succeeded" %}
+              100%
+              {% else %}
+              0%
+              {% endif %}
+            </strong>
+          </div>
+          <dl class="progress-facts">
+            <div>
+              <dt>Completed model steps</dt>
+              <dd data-progress-completed>{{ job.progress.completed_steps if job.progress else 0 }}</dd>
+            </div>
+            <div>
+              <dt>Latest active step</dt>
+              <dd data-progress-started>{{ job.progress.started_steps if job.progress else 0 }}</dd>
+            </div>
+          </dl>
+        </div>
         <p class="status-copy" data-status-copy>
           {% if job.status == "queued" %}
           Waiting for a worker to pick up the run.
           {% elif job.status == "running" %}
-          Extracting structure, generating selections, and rendering the annotated PDF.
+          {{ job.progress.message if job.progress else "Extracting structure, generating selections, and rendering the annotated PDF." }}
           {% elif job.status == "failed" %}
           {{ job.error }}
           {% else %}
@@ -40,8 +99,8 @@
       </article>
 
       <article class="info-card">
-        <p class="card-kicker">Counts</p>
-        <h2>Study artifacts</h2>
+        <p class="card-kicker">Study artifacts</p>
+        <h2>Run output</h2>
         <dl class="job-stats">
           <div>
             <dt>Highlights</dt>
@@ -65,8 +124,8 @@
 
     <section class="viewer-panel">
       <div class="viewer-frame" data-viewer-shell>
-        {% if job.annotated_pdf_url %}
-        <iframe src="{{ job.annotated_pdf_url }}" title="Annotated PDF" data-annotated-viewer></iframe>
+        {% if job.viewer_url %}
+        <iframe src="{{ job.viewer_url }}" title="Annotated PDF" data-annotated-viewer></iframe>
         {% else %}
         <div class="viewer-placeholder">
           <p>The viewer will appear here as soon as the annotated PDF is ready.</p>

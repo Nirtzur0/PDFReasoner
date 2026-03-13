@@ -35,10 +35,22 @@
       <div class="alert">{{ error }}</div>
       {% endif %}
       <form class="upload-form" action="/jobs" method="post" enctype="multipart/form-data">
-        <label class="file-drop">
-          <input type="file" name="file" accept="application/pdf,.pdf" required>
+        <label class="file-drop" for="paper-upload">
+          <input
+            id="paper-upload"
+            class="file-input"
+            type="file"
+            name="file"
+            accept="application/pdf,.pdf"
+            required
+            data-upload-input
+          >
           <span class="file-drop-title">Choose a PDF</span>
           <span class="file-drop-copy">Drag a paper here or browse from disk.</span>
+          <span class="file-drop-meta">
+            <span class="file-drop-badge">Browse files</span>
+            <span class="file-drop-name" data-upload-filename>No file selected yet</span>
+          </span>
         </label>
         <button type="submit" class="primary-button">Process paper</button>
       </form>
@@ -55,12 +67,17 @@
     </div>
 
     {% if recent_jobs %}
-    <div class="job-grid">
+    <div class="job-grid" data-home-jobs>
       {% for job in recent_jobs %}
-      <article class="job-card status-{{ job.status }}">
+      <article
+        class="job-card status-{{ job.status }}"
+        data-job-card
+        data-job-id="{{ job.job_id }}"
+        data-job-status="{{ job.status }}"
+      >
         <div class="job-card-header">
           <div>
-            <p class="job-status">{{ job.status_label }}</p>
+            <p class="job-status" data-home-status>{{ job.status_label }}</p>
             <h3><a href="{{ job.detail_url }}">{{ job.title_or_filename }}</a></h3>
           </div>
           <span class="pill">{{ job.filename }}</span>
@@ -68,21 +85,21 @@
         <dl class="job-stats">
           <div>
             <dt>Highlights</dt>
-            <dd>{{ job.counts.highlights }}</dd>
+            <dd data-home-count-highlights>{{ job.counts.highlights }}</dd>
           </div>
           <div>
             <dt>Notes</dt>
-            <dd>{{ job.counts.notes }}</dd>
+            <dd data-home-count-notes>{{ job.counts.notes }}</dd>
           </div>
           <div>
             <dt>Equations</dt>
-            <dd>{{ job.counts.equations }}</dd>
+            <dd data-home-count-equations>{{ job.counts.equations }}</dd>
           </div>
         </dl>
         {% if job.error %}
-        <p class="job-error">{{ job.error }}</p>
+        <p class="job-error" data-home-meta>{{ job.error }}</p>
         {% else %}
-        <p class="job-meta">Updated {{ job.updated_at }}</p>
+        <p class="job-meta" data-home-meta>Updated {{ job.updated_at }}</p>
         {% endif %}
       </article>
       {% endfor %}

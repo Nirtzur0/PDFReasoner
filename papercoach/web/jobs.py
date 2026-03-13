@@ -15,6 +15,56 @@ from papercoach.pipeline import PaperCoachPipeline
 
 JobStatus = Literal["queued", "running", "succeeded", "failed"]
 
+_PROMPT_PROGRESS = {
+    "key_idea_extraction": (
+        "Reading the paper",
+        "identifying the main ideas that will guide the highlights.",
+        1,
+    ),
+    "document_selection": (
+        "Selecting highlights",
+        "choosing the passages that should be marked in the annotated PDF.",
+        2,
+    ),
+    "page_note_generation": (
+        "Writing margin notes",
+        "turning the selected highlights into short study notes.",
+        3,
+    ),
+    "equation_candidate_screen": (
+        "Screening equations",
+        "filtering the equations down to the ones worth explaining.",
+        4,
+    ),
+    "equation_selection": (
+        "Choosing equations",
+        "deciding which equations should receive annotations.",
+        5,
+    ),
+    "equation_explanation": (
+        "Explaining equations",
+        "writing plain-language explanations for the selected equations.",
+        6,
+    ),
+    "equation_explanation_retry": (
+        "Rewriting an equation note",
+        "trying again on an explanation that did not meet the quality bar.",
+        6,
+    ),
+    "equation_evaluation": (
+        "Checking equation notes",
+        "verifying the explanation quality before rendering the PDF.",
+        7,
+    ),
+    "equation_evaluation_retry": (
+        "Rechecking an equation note",
+        "running another verification pass on a revised explanation.",
+        7,
+    ),
+}
+
+_TOTAL_PIPELINE_STAGES = 7
+
 
 def utc_now_iso() -> str:
     return datetime.now(UTC).isoformat()
@@ -27,6 +77,18 @@ class JobCounts(BaseModel):
     equation_notes: int = 0
 
 
+class JobProgress(BaseModel):
+    started_steps: int = 0
+    completed_steps: int = 0
+    current_prompt: str | None = None
+    stage_title: str
+    stage_detail: str
+    stage_index: int
+    total_stages: int
+    progress_percent: int
+    message: str
+
+
 class JobRecord(BaseModel):
     job_id: str
     filename: str
@@ -37,7 +99,13 @@ class JobRecord(BaseModel):
     updated_at: str
     counts: JobCounts = Field(default_factory=JobCounts)
 
-    def to_api_payload(self) -> dict[str, object]:
+    def to_api_payload(
+        self,
+        progress: JobProgress | None = None,
+        *,
+        annotated_pdf_url: str | None = None,
+        viewer_url: str | None = None,
+    ) -> dict[str, object]:
         payload: dict[str, object] = {
             "job_id": self.job_id,
             "status": self.status,
@@ -47,10 +115,10 @@ class JobRecord(BaseModel):
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "counts": self.counts.model_dump(),
-            "annotated_pdf_url": None,
+            "annotated_pdf_url": annotated_pdf_url,
+            "viewer_url": viewer_url,
+            "progress": progress.model_dump() if progress is not None else None,
         }
-        if self.status == "succeeded":
-            payload["annotated_pdf_url"] = f"/files/{self.job_id}/annotated.pdf"
         return payload
 
 
@@ -137,6 +205,84 @@ class DiskJobStore:
 
     def annotated_path(self, job_id: str) -> Path:
         return self.job_dir(job_id) / "annotated.pdf"
+
+    def trace_path(self, job_id: str) -> Path:
+        return self.job_dir(job_id) / "trace.jsonl"
+
+    def progress(self, job_id: str) -> JobProgress | None:
+        trace_path = self.trace_path(job_id)
+        if not trace_path.exists():
+            return None
+
+        started_steps = 0
+        completed_steps = 0
+        latest_prompt: str | None = None
+        latest_type: str | None = None
+        with trace_path.open(encoding="utf-8") as handle:
+            for raw_line in handle:
+                line = raw_line.strip()
+                if not line:
+                    continue
+                event = json.loads(line)
+                event_type = str(event.get("type", "")).strip()
+                prompt_name = str(event.get("prompt_name", "")).strip() or None
+                if event_type == "request":
+                    started_steps += 1
+                elif event_type == "response":
+                    completed_steps += 1
+                latest_type = event_type or latest_type
+                latest_prompt = prompt_name or latest_prompt
+
+        if started_steps == 0 and completed_steps == 0:
+            return None
+
+        message = self._progress_message(
+            latest_prompt=latest_prompt,
+            latest_type=latest_type,
+            started_steps=started_steps,
+            completed_steps=completed_steps,
+        )
+        stage_title, stage_detail, stage_index = _PROMPT_PROGRESS.get(
+            latest_prompt or "",
+            ("Processing the paper", "updating the annotated PDF pipeline.", 1),
+        )
+        return JobProgress(
+            started_steps=started_steps,
+            completed_steps=completed_steps,
+            current_prompt=latest_prompt,
+            stage_title=stage_title,
+            stage_detail=stage_detail,
+            stage_index=stage_index,
+            total_stages=_TOTAL_PIPELINE_STAGES,
+            progress_percent=self._progress_percent(stage_index, latest_type),
+            message=message,
+        )
+
+    def _progress_message(
+        self,
+        *,
+        latest_prompt: str | None,
+        latest_type: str | None,
+        started_steps: int,
+        completed_steps: int,
+    ) -> str:
+        stage, detail, _ = _PROMPT_PROGRESS.get(
+            latest_prompt or "",
+            ("Processing the paper", "updating the annotated PDF pipeline.", 1),
+        )
+        if latest_type == "request":
+            return (
+                f"{stage}: {detail} "
+                f"Step {started_steps} is in progress and {completed_steps} model steps are complete."
+            )
+        return f"{stage} finished. {detail} {completed_steps} model steps are complete."
+
+    def _progress_percent(self, stage_index: int, latest_type: str | None) -> int:
+        if latest_type == "response":
+            ratio = stage_index / _TOTAL_PIPELINE_STAGES
+        else:
+            ratio = max(stage_index - 0.45, 0.35) / _TOTAL_PIPELINE_STAGES
+        return int(round(max(0.0, min(1.0, ratio)) * 100))
 
     async def save_upload(self, job_id: str, upload) -> None:
         target = self.input_path(job_id)
