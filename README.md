@@ -1,34 +1,47 @@
 # PaperCoach
 
-PaperCoach is a phase-1 study tool for research papers. It reads a born-digital PDF, sends the paper text to a `ChatMock` backend using model `gpt-5`, aligns the model-selected highlight quotes back to PDF text coordinates, and writes native PDF highlights plus right-margin study notes into a new PDF.
+PaperCoach is a local research PDF studio. Upload a born-digital paper, let the
+pipeline extract the key ideas, and review the annotated result in an embedded
+viewer with highlights, margin notes, and equation explanations.
 
-## Setup
+<p align="center">
+  <img src="docs/product-shots/home-studio.png" alt="PaperCoach home screen" width="48%" />
+  <img src="docs/product-shots/viewer-detail.png" alt="PaperCoach annotated PDF viewer" width="48%" />
+</p>
+
+## What It Does
+
+- Ingests born-digital PDFs and keeps each run on disk.
+- Generates study-ready highlights, notes, and equation callouts.
+- Shows progress and outputs in a single local web workspace.
+- Opens the final annotated PDF in an embedded PDF.js reader.
+
+## Quick Start
+
+Install the project:
 
 ```bash
 python3 -m pip install -e .
 python3 -m pip install -e '.[dev]'
 ```
 
-## Backend
+Start a backend. By default PaperCoach expects an OpenAI-compatible endpoint at
+`http://127.0.0.1:8000/v1`.
 
-PaperCoach expects an OpenAI-compatible endpoint. By default it talks to a local
-ChatMock instance at `http://127.0.0.1:8000/v1` using a placeholder API key. If
-`OPENAI_API_KEY` is set, PaperCoach switches to the OpenAI API by default instead.
-Use `PAPERCOACH_*` to override either default explicitly.
+Use local ChatMock (installed separately):
 
-### Local ChatMock default
+```bash
+chatmock serve
+```
 
-No extra backend environment variables are required if ChatMock is already running
-on its default local endpoint.
-
-### OpenAI default
+Or use OpenAI directly:
 
 ```bash
 export OPENAI_API_KEY=your-key
 export PAPERCOACH_MODEL=gpt-5
 ```
 
-### Custom compatible backend
+If your local backend is not on `:8000`, point PaperCoach at it explicitly:
 
 ```bash
 export PAPERCOACH_BASE_URL=http://127.0.0.1:8001/v1
@@ -36,17 +49,13 @@ export PAPERCOACH_API_KEY=dummy
 export PAPERCOACH_MODEL=gpt-5
 ```
 
-## Web app
+Run the web app:
 
-The web UI serves on `http://127.0.0.1:8080` by default so it does not collide
-with ChatMock's default `127.0.0.1:8000` listener.
+```bash
+papercoach serve --host 127.0.0.1 --port 8080
+```
 
-The implementation is based on:
-
-- [PyMuPDF text extraction recipes](https://pymupdf.readthedocs.io/en/latest/recipes-text.html)
-- [PyMuPDF annotation recipes](https://pymupdf.readthedocs.io/en/latest/recipes-annotations.html)
-- [OpenAI Chat Completions API reference](https://platform.openai.com/docs/api-reference/chat)
-- [ChatMock README](https://github.com/RayBytes/ChatMock)
+Open [http://127.0.0.1:8080](http://127.0.0.1:8080).
 
 ## CLI
 
@@ -56,17 +65,22 @@ papercoach highlight-plan papers/example.pdf --workdir runs/example
 papercoach render-highlights papers/example.pdf runs/example/highlight_plan.json --out output/pdf/example-highlighted.pdf --workdir runs/example
 ```
 
-### Phase-1 constraints
-
-- Only born-digital PDFs are supported.
-- The backend is strict: if the configured model is not available through ChatMock, the run fails.
-- Highlights and concise study notes are implemented in this phase.
-
 ## Outputs
 
-For each run:
+Each run writes its own working set:
 
 - `runs/<paper-slug>/highlight_plan.json`
 - `runs/<paper-slug>/run_manifest.json`
 - `runs/<paper-slug>/trace.jsonl`
 - `output/pdf/<paper-slug>-highlighted.pdf`
+
+## Constraints
+
+- Only born-digital PDFs are supported.
+- The configured model must exist on the selected backend.
+- The product is optimized around local runs and persistent on-disk artifacts.
+
+## Stack
+
+PaperCoach is built on PyMuPDF, FastAPI, PDF.js, and an OpenAI-compatible model
+backend such as ChatMock.
