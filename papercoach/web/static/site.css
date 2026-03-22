@@ -46,10 +46,20 @@ a {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
   font-family: var(--serif);
   font-size: 1.35rem;
   text-decoration: none;
   letter-spacing: 0.04em;
+}
+
+.brand-mark {
+  display: block;
+  width: 32px;
+  height: 32px;
+  flex: none;
 }
 
 .topnav {

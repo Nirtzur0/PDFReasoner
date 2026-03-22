@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">PaperCoach logo</title>
+  <desc id="desc">A softly rounded paper silhouette with a focus ring and stem forming a P.</desc>
+  <defs>
+    <linearGradient id="paper-fill" x1="56" y1="34" x2="178" y2="214" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF9"/>
+      <stop offset="0.55" stop-color="#F3EEE5"/>
+      <stop offset="1" stop-color="#E7E0D6"/>
+    </linearGradient>
+    <linearGradient id="fold-fill" x1="134" y1="36" x2="178" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#D7DFE4"/>
+    </linearGradient>
+    <linearGradient id="ink-fill" x1="84" y1="68" x2="204" y2="194" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#141B24"/>
+      <stop offset="0.56" stop-color="#173843"/>
+      <stop offset="1" stop-color="#2D7C78"/>
+    </linearGradient>
+    <radialGradient id="ring-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(146 114) rotate(90) scale(60)">
+      <stop stop-color="#83D4C8" stop-opacity="0.34"/>
+      <stop offset="0.52" stop-color="#83D4C8" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#83D4C8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="paper-shadow" x="28" y="18" width="170" height="214" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#1B1A17" flood-opacity="0.12"/>
+    </filter>
+    <filter id="ring-shadow" x="84" y="70" width="144" height="144" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#143036" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#paper-shadow)">
+    <path
+      d="M84 34H134L176 76V170C176 190.987 158.987 208 138 208H84C63.0132 208 46 190.987 46 170V72C46 51.0132 63.0132 34 84 34Z"
+      fill="url(#paper-fill)"
+      stroke="#F7F2EA"
+      stroke-width="2"
+    />
+    <path
+      d="M134 34V54C134 67.2548 144.745 78 158 78H176L134 34Z"
+      fill="url(#fold-fill)"
+    />
+    <path
+      d="M134 34V54C134 67.2548 144.745 78 158 78H176"
+      stroke="#D3DADF"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+
+  <circle cx="146" cy="114" r="60" fill="url(#ring-glow)"/>
+  <circle
+    cx="146"
+    cy="114"
+    r="38"
+    stroke="url(#ink-fill)"
+    stroke-width="16"
+    filter="url(#ring-shadow)"
+  />
+  <path
+    d="M122 91C129.8 83.4 138.4 79.6 147.8 79.6C156.4 79.6 164.5 82.2 172 87.6"
+    stroke="white"
+    stroke-opacity="0.58"
+    stroke-width="6"
+    stroke-linecap="round"
+  />
+  <rect x="86" y="68" width="22" height="112" rx="11" fill="url(#ink-fill)"/>
+  <path
+    d="M94 80V152"
+    stroke="white"
+    stroke-opacity="0.18"
+    stroke-width="3"
+    stroke-linecap="round"
+  />
+</svg>

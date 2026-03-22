@@ -32,6 +32,7 @@ def test_web_app_processes_pdf_and_serves_annotation(
     with TestClient(app) as client:
         home = client.get("/")
         assert home.status_code == 200
+        assert "/static/logo.svg" in home.text
         assert "Browse files" in home.text
         assert "No file selected yet" in home.text
 
@@ -82,6 +83,28 @@ def test_web_app_processes_pdf_and_serves_annotation(
         home = client.get("/")
         assert home.status_code == 200
         assert payload["filename"] in home.text
+
+
+def test_web_app_serves_brand_assets(tmp_path: Path) -> None:
+    app = create_app(
+        services=ServiceConfig(base_url="http://127.0.0.1:9/v1", api_key="dummy", model="gpt-5"),
+        jobs_root=tmp_path / "web-runs",
+    )
+
+    with TestClient(app) as client:
+        home = client.get("/")
+        assert home.status_code == 200
+        assert "/static/logo.svg" in home.text
+
+        logo = client.get("/static/logo.svg")
+        assert logo.status_code == 200
+        assert logo.headers["content-type"].startswith("image/svg+xml")
+        assert "<svg" in logo.text
+
+        favicon = client.get("/favicon.ico")
+        assert favicon.status_code == 200
+        assert favicon.headers["content-type"].startswith("image/svg+xml")
+        assert "<svg" in favicon.text
 
 
 def test_web_app_surfaces_pipeline_failures(

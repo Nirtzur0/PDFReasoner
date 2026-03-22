@@ -12,7 +12,10 @@
   <body>
     <div class="shell">
       <header class="topbar">
-        <a class="brand" href="/">PaperCoach</a>
+        <a class="brand" href="/" aria-label="PaperCoach home">
+          <img class="brand-mark" src="{{ request.url_for('static', path='logo.svg') }}" alt="">
+          <span>PaperCoach</span>
+        </a>
         <nav class="topnav">
           <a href="/">Home</a>
           <a href="/design-preview">Design Preview</a>
